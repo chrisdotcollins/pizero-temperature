@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pizero Temperature real-time plots</title>
+    <script type="text/javascript" src="vendor/smoothie.js"></script>
+    <script type="text/javascript" src="vendor/reconnecting-websocket.min.js"></script>
+    <script type="text/javascript">
+
+      var readings = new TimeSeries();
+      
+      function createTimeline() {
+        var chart = new SmoothieChart({
+          interpolation:'bezier',
+       grid:{millisPerLine:5000,verticalSections:15},
+       tooltip:true,
+       timestampFormatter:SmoothieChart.timeFormatter,
+          minValue:0.0,
+          maxValue:30.0
+        });
+
+        chart.addTimeSeries(readings, { 
+            strokeStyle: 'rgba(103, 111, 103, 0.96)',
+            fillStyle: 'rgba(189,31,31,0.30)',
+            lineWidth: 3 });
+
+        chart.streamTo(document.getElementById("chart"), 500);
+      }
+
+      var ws = new ReconnectingWebSocket('ws://192.168.1.26:8080/');
+      ws.onopen = function() {
+        document.body.style.backgroundColor = '#fff';
+      };
+      ws.onclose = function() {
+        document.body.style.backgroundColor = null;
+      };
+      ws.onmessage = function(event) {
+        var data = event.data.split(",");
+        var timestamp = parseFloat(data[0]) * 1000;  // expects ms
+        var value = parseFloat(data[1]);
+        readings.append(timestamp, value);
+      };
+
+    </script>
+  </head>
+  <body onload="createTimeline()">
+    <h2> Pizero Temperature Sensor </h2>
+    <canvas id="chart" width="800" height="400"></canvas>
+  </body>
+</html>
