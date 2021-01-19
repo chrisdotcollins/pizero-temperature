@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Pizero Temperature real-time plots</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(draw1Visualization);
+
+//######
+      function draw1Visualization() {
+                // Some raw data (not necessarily accurate)
+        var data = google.visualization.arrayToDataTable([
+                ['Time', 'Temp'],
+                ['2021-01-19T22:15:01',18.5625],
+['2021-01-19T22:20:01',18.5],
+['2021-01-19T22:25:01',18.5],
+['2021-01-19T22:30:01',18.5],
+['2021-01-19T22:35:01',18.5],
+                ]);
+        var options = {
+          title : 'PiZero Temp Log',
+          vAxis: {title: 'Degrees',minValue:7,viewWindow:{ min: 7 }},
+          hAxis: {title: 'Timestamp'},
+          seriesType: 'bars',
+          series: {1: {type: 'line'}}
+        };
+
+        var chart = new google.visualization.ComboChart(document.getElementById('chart_div1'));
+        chart.draw(data, options);
+        }
+//######
+    </script>
+    <script type="text/javascript" src="vendor/smoothie.js"></script>
+    <script type="text/javascript" src="vendor/reconnecting-websocket.min.js"></script>
+    <script type="text/javascript">
+
+      var readings = new TimeSeries();
+      
+      function createTimeline() {
+        var chart = new SmoothieChart({
+          millisPerPixel: 1000,
+          interpolation:'bezier',
+       grid:{millisPerLine:60000,verticalSections:15,fillStyle:'#ffffff'},
+       tooltip:true,
+       timestampFormatter:SmoothieChart.timeFormatter,
+          minValue:0.0,
+          maxValue:30.0
+        });
+
+        chart.addTimeSeries(readings, { 
+            strokeStyle: '#990000',
+            fillStyle: 'rgba(0,0,0,0.61)',
+            lineWidth: 3 });
+
+        chart.streamTo(document.getElementById("chart"), 500);
+      }
+
+      var ws = new ReconnectingWebSocket('ws://192.168.1.26:8080/');
+      ws.onopen = function() {
+        document.body.style.backgroundColor = '#fff';
+      };
+      ws.onclose = function() {
+        document.body.style.backgroundColor = null;
+      };
+      ws.onmessage = function(event) {
+        var data = event.data.split(",");
+        var timestamp = parseFloat(data[0]) * 1000;  // expects ms
+        var value = parseFloat(data[1]);
+        readings.append(timestamp, value);
+        document.getElementById("demo").innerHTML = value;
+      };
+
+    var myVar = setInterval(myTimer, 1000);
+    
+    function myTimer() {
+     var d = new Date();
+     var t = d.toLocaleTimeString();
+     document.getElementById("demo2").innerHTML = t;
+    }
+
+    </script>
+  </head>
+  <body onload="createTimeline()">
+    <h2> Pizero Temperature Sensor </h2>
+    <canvas id="chart" width=800 height="400"></canvas>
+    <div id="chart_div1" style="width: 800px; height: 400px;"></div>
+
+
+    <h2 id="demo2"></h2>
+    <h2 id="demo"></2>
+
+
+
+  </body>
+</html>
