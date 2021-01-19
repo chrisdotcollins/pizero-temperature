@@ -10,8 +10,9 @@
       
       function createTimeline() {
         var chart = new SmoothieChart({
+          millisPerPixel: 1000,
           interpolation:'bezier',
-       grid:{millisPerLine:5000,verticalSections:15},
+       grid:{millisPerLine:60000,verticalSections:15},
        tooltip:true,
        timestampFormatter:SmoothieChart.timeFormatter,
           minValue:0.0,
@@ -53,7 +54,7 @@
   </head>
   <body onload="createTimeline()">
     <h2> Pizero Temperature Sensor </h2>
-    <canvas id="chart" width="800" height="400"></canvas>
+    <canvas id="chart" width=800 height="400"></canvas>
 
 
     <h2 id="demo2"></h2>
